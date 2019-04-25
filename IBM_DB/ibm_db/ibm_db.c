@@ -5669,8 +5669,11 @@ static int _python_ibm_db_bind_data( stmt_handle *stmt_res, param_node *curr, Py
 						curr->uvalue = NULL;
 					}
 					curr->uvalue = getUnicodeDataAsSQLTCHAR(bind_data, &isNewBuffer);
-					curr->ivalue = PyUnicode_GetSize(bind_data);
-					curr->ivalue = curr->ivalue * sizeof(SQLTCHAR);
+#ifdef __PASE__
+					curr->ivalue = strlen(curr->uvalue);
+#else
+					curr->ivalue = PyUnicode_GetSize(bind_data) * sizeof(SQLTCHAR);
+#endif
 				}
 				param_length = curr->ivalue;
 				if (curr->size != 0) {
