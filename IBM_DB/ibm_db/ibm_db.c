@@ -493,6 +493,27 @@ TIMESTAMP_STRUCT parse_ibmi_timestamp(const void* timestamp, int precision) {
 }
 #endif
 
+#ifdef __PASE__
+SQLRETURN SQLBindCol_replace(SQLHSTMT hstmt, SQLUSMALLINT colno,
+                             SQLSMALLINT type, SQLPOINTER buffer,
+							 SQLINTEGER buflen, SQLINTEGER* ind)
+{
+	SQLRETURN rc = SQLBindCol(hstmt, colno, type, buffer, buflen, ind);
+
+	if (rc != SQL_ERROR || buflen <= 32767) return rc;
+
+	// PASE CLI had a bug that causes SQLBindCol with buffer length > 32767
+	// to return error HY009. We work around this by changing the buffer
+	// size to 32767 and re-binding
+
+	buflen = 32767;
+	return SQLBindCol(hstmt, colno, type, buffer, buflen, ind);
+}
+
+#define SQLBindCol SQLBindCol_replace
+#endif
+
+
 /*	static void _python_ibm_db_free_conn_struct */
 static void _python_ibm_db_free_conn_struct(conn_handle *handle) {
 
